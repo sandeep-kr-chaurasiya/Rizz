@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
 import { MessageSquare, CircleEllipsis, Settings, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const [active, setActive] = useState("Chats");
   const [activeChatId, setActiveChatId] = useState("u1");
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState({
     name: "Sandeep Kumar",
@@ -49,6 +51,32 @@ export default function Home() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeChat]);
+
+  // Fetch profile from backend when user opens Settings
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (active !== 'Settings') return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch('http://localhost:5050/auth/check', {
+          headers: { Authorization: token },
+        });
+        if (!res.ok) {
+          // token invalid or other error
+          console.warn('Profile fetch failed', res.status);
+          return;
+        }
+        const data = await res.json();
+        if (data?.user) {
+          setProfile(prev => ({ ...prev, name: data.user.username || prev.name, email: data.user.email || prev.email }));
+        }
+      } catch (err) {
+        console.error('Error fetching profile', err);
+      }
+    };
+    fetchProfile();
+  }, [active]);
 
   const handleSend = (text) => {
     if (!text.trim()) return;
@@ -113,7 +141,11 @@ export default function Home() {
 
         <div className="hidden md:block mb-6">
           <button
-            onClick={() => alert('Logging out...')}
+            onClick={() => {
+              localStorage.removeItem('token');
+              // navigate back to landing
+              try { navigate('/'); } catch (e) { window.location.href = '/'; }
+            }}
             className="p-3 rounded-xl hover:bg-white/80 text-gray-700 transition"
             title="Logout"
           >

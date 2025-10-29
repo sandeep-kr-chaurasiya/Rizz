@@ -12,9 +12,19 @@ const signup = async (req, res) => {
     const userModel = new UserModel({ username, email, password });
     userModel.password = await bcrypt.hash(password, 10);
     await userModel.save();
-    res
-      .status(201)
-      .json({ message: "User registered successfully", success: true });
+    // create jwt token on signup so frontend can log user in immediately
+    const jwtToken = jwt.sign(
+      { email: userModel.email, id: userModel._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    res.status(201).json({
+      message: "User registered successfully",
+      success: true,
+      jwtToken,
+      email: userModel.email,
+      username: userModel.username,
+    });
   } catch (err) {
     res.status(500).json({
       message: " internal Server Error",

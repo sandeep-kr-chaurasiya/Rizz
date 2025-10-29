@@ -8,10 +8,30 @@ export default function Signup() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Signup data:", formData);
-    navigate("/home");
+    try {
+      const body = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      };
+      const res = await fetch('http://localhost:5050/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok && data.jwtToken) {
+        localStorage.setItem('token', data.jwtToken);
+        navigate('/home');
+      } else {
+        alert(data.message || 'Signup failed');
+      }
+    } catch (err) {
+      console.error('Signup error', err);
+      alert('Signup failed');
+    }
   };
 
   return (
@@ -65,7 +85,6 @@ export default function Signup() {
             placeholder="Phone Number"
             onChange={handleChange}
             className="w-full px-4 py-3 rounded-lg bg-white/80 border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:outline-none text-gray-900"
-            required
           />
           <input
             type="password"

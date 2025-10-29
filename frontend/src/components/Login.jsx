@@ -8,10 +8,25 @@ export default function Login() {
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login data:", formData);
-    navigate("/home");
+    try {
+      const res = await fetch('http://localhost:5050/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.jwtToken) {
+        localStorage.setItem('token', data.jwtToken);
+        navigate('/home');
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (err) {
+      console.error('Login error', err);
+      alert('Login failed');
+    }
   };
 
   return (
