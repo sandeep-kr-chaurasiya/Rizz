@@ -1,36 +1,28 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import auth from '../lib/auth'
 
 export default function Signup() {
   const [formData, setFormData] = useState({ username: "", email: "", phone: "", password: "" });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const body = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      };
-      const res = await fetch('http://localhost:5050/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (res.ok && data.jwtToken) {
-        localStorage.setItem('token', data.jwtToken);
+      const res = await auth.signup({ username: formData.username, email: formData.email, password: formData.password });
+      if (res.ok && res.data?.jwtToken) {
+        auth.setToken(res.data.jwtToken);
         navigate('/home');
       } else {
-        alert(data.message || 'Signup failed');
+        setError(res.data?.message || 'Signup failed');
       }
     } catch (err) {
-      console.error('Signup error', err);
-      alert('Signup failed');
+      setError('Signup failed');
     }
   };
 
@@ -103,6 +95,8 @@ export default function Signup() {
             Sign Up
           </motion.button>
         </form>
+
+        {error && <p className="text-center text-sm text-red-600 mt-4">{error}</p>}
 
         <p className="text-center text-gray-700 mt-6">
           Already have an account?{" "}

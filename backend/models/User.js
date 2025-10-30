@@ -16,6 +16,15 @@ const userSchema = new schema({
         type: String,
         required: true,
     }
+    ,
+    phone: {
+        type: String,
+        required: false,
+    },
+    bio: {
+        type: String,
+        required: false,
+    }
 });
 
 const UserModel = mongoose.model('User', userSchema);

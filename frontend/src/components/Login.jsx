@@ -1,31 +1,28 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import auth from '../lib/auth'
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const res = await fetch('http://localhost:5050/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
-      });
-      const data = await res.json();
-      if (res.ok && data.jwtToken) {
-        localStorage.setItem('token', data.jwtToken);
+      const res = await auth.login({ email: formData.email, password: formData.password });
+      if (res.ok && res.data?.jwtToken) {
+        auth.setToken(res.data.jwtToken);
         navigate('/home');
       } else {
-        alert(data.message || 'Login failed');
+        setError(res.data?.message || 'Login failed');
       }
     } catch (err) {
-      console.error('Login error', err);
-      alert('Login failed');
+      setError('Login failed');
     }
   };
 
@@ -91,6 +88,7 @@ export default function Login() {
             Sign Up
           </Link>
         </p>
+        {error && <p className="text-center text-sm text-red-600 mt-4">{error}</p>}
       </motion.div>
     </div>
   );

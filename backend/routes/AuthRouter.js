@@ -14,12 +14,15 @@ router.get('/check', isAuthenticated, async (req, res) => {
 	try {
 		const userId = req.user?.id;
 		if (!userId) return res.status(400).json({ success: false, message: 'No user id in token' });
-		const user = await UserModel.findById(userId).select('username email');
+		const user = await UserModel.findById(userId).select('username email phone bio');
 		if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-		res.status(200).json({ success: true, user: { username: user.username, email: user.email } });
+		res.status(200).json({ success: true, user: { username: user.username, email: user.email, phone: user.phone, bio: user.bio } });
 	} catch (err) {
 		res.status(500).json({ success: false, message: 'Server error', error: err.message });
 	}
 });
+
+const { updateProfile } = require('../controllers/authController');
+router.patch('/profile', isAuthenticated, updateProfile);
 
 module.exports = router;
